@@ -27,7 +27,7 @@ public class ImageProcessing extends JFrame {
         super("Filtro de Imagens");
 
         readImage("lena.png");
-        img2 = toGrayscale(img1);
+        img2 = toSepia(img1);
         img2lbl.setIcon(new ImageIcon(img2));
         imagePanel.add(img1lbl, BorderLayout.WEST);
         imagePanel.add(img2lbl, BorderLayout.EAST);
@@ -92,5 +92,39 @@ public class ImageProcessing extends JFrame {
         }
 
         return gsImage;
+    }
+
+    BufferedImage toSepia(BufferedImage image){
+        int i, j, rows, columns, pixel, red, green, blue;
+        int outputRed, outputGreen, outputBlue; 
+        
+        rows = image.getHeight();
+        columns = image.getWidth();
+
+        BufferedImage spImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
+
+        for (i = 0; i < rows - 1; i++){
+            for (j = 0; j < columns - 1; j++){
+                pixel = image.getRGB(i, j);
+                
+                red = (pixel >> 16) & 0xff;
+                green = (pixel >> 8) & 0xff;
+                blue = pixel & 0xff;
+
+                // convert RGB values to sepia
+                outputRed = (int) (.393 * red + .769 * green + .189 * blue);
+                outputGreen = (int) (.349 * red + .686 * green + .168 * blue);
+                outputBlue = (int) (.272 * red + .534 * green + .131 * blue);  
+                
+                // if any output values is greater than 255, set it to 255
+                outputRed = (outputRed > 255) ? 255 : outputRed;
+                outputGreen = (outputGreen > 255) ? 255 : outputGreen;
+                outputBlue = (outputBlue > 255) ? 255 : outputBlue;
+                
+                spImage.setRGB(i, j, (outputRed << 16) + (outputGreen << 8) + outputBlue);
+            }
+        }
+
+        return spImage;
     }
 }
