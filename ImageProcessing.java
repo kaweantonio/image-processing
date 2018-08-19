@@ -3,39 +3,48 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.*;
-import javax.xml.transform.Source;
 
 import java.awt.GridLayout;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.TreeMap;
-import java.util.HashMap;
-import java.util.Map;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class ImageProcessing extends JFrame {
-    BufferedImage originalImage, img1, img2;
-    JPanel imagePanel = new JPanel();
-    JLabel img1lbl = new JLabel();
-    JLabel img2lbl = new JLabel();
+    BufferedImage originalImage, filteredImage;
+    JPanel imagesPanel = new JPanel();
+    JPanel optionPanel = new JPanel();
+    JLabel originaImageLabel = new JLabel();
+    JLabel filteredImageLabel = new JLabel();
+    JComboBox filtersList;
     
     ImageProcessing(){
-        super("Filtro de Imagens");
+        super("Filtros de Imagem");
 
-        // readImage("lena.png");
-        readImage("waterlilies.jpg");
-        img2 = laplaceEdgeDetector(img1);
-        img2lbl.setIcon(new ImageIcon(img2));
-        imagePanel.add(img1lbl, BorderLayout.WEST);
-        imagePanel.add(img2lbl, BorderLayout.EAST);
+        readImage("lena.png");
+        // readImage("waterlilies.jpg");
+        filteredImage = grayscale(originalImage);
+        filteredImageLabel.setIcon(new ImageIcon(filteredImage));
+        imagesPanel.add(originaImageLabel, BorderLayout.WEST);
+        imagesPanel.add(filteredImageLabel, BorderLayout.EAST);
         
-        add(imagePanel, BorderLayout.NORTH);
+        String[] filters = {"Grayscale", "Sepia", "Solarize", "Gaussian Blur", "Laplace Edge Detector"};
+        filtersList = new JComboBox<String>(filters);
+        filtersList.setSelectedIndex(0);
+        optionPanel.add(filtersList);
+
+        add(imagesPanel, BorderLayout.NORTH);
+        add(optionPanel, BorderLayout.SOUTH);
+
+        filtersList.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e) {
+                changeFilter();
+            }
+        });
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setResizable(false);
         pack();
         setVisible(true);
     }
@@ -51,16 +60,29 @@ public class ImageProcessing extends JFrame {
             JOptionPane.showMessageDialog(null, "Something get wrong while trying read the image: " + e.toString());
             System.exit(0);
         }
-        img1 = copyImage(originalImage);
-        img1lbl.setIcon(new ImageIcon(img1));
+        originaImageLabel.setIcon(new ImageIcon(originalImage));
     }
 
-    BufferedImage copyImage(BufferedImage source){
-        BufferedImage copy = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
-        Graphics2D g = copy.createGraphics();
-        g.drawImage(source, 0, 0, null);
-        g.dispose();
-        return copy;
+    // BufferedImage copyImage(BufferedImage source){
+    //     BufferedImage copy = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
+    //     Graphics2D g = copy.createGraphics();
+    //     g.drawImage(source, 0, 0, null);
+    //     g.dispose();
+    //     return copy;
+    // }
+
+    void changeFilter(){
+        int filter = filtersList.getSelectedIndex();
+
+        switch(filter){
+            case 0: filteredImage = grayscale(originalImage); break;
+            case 1: filteredImage = sepia(originalImage); break;
+            case 2: filteredImage = solarize(originalImage); break;
+            case 3: filteredImage = gaussianBlur(originalImage); break;
+            case 4: filteredImage = laplaceEdgeDetector(originalImage); break;
+        }
+
+        filteredImageLabel.setIcon(new ImageIcon(filteredImage));
     }
 
     /* grayscale filter
@@ -70,7 +92,7 @@ public class ImageProcessing extends JFrame {
 
         Source: (MSDN) https://msdn.microsoft.com/en-us/library/bb332387.aspx#tbconimagecolorizer_grayscaleconversion
     */ 
-    BufferedImage toGrayscale(BufferedImage image){
+    BufferedImage grayscale(BufferedImage image){
         int i, j, rows, columns, pixel, red, green, blue, gray; 
         
         rows = image.getHeight();
@@ -96,7 +118,7 @@ public class ImageProcessing extends JFrame {
     }
 
     // sepia filter
-    BufferedImage toSepia(BufferedImage image){
+    BufferedImage sepia(BufferedImage image){
         int i, j, rows, columns, pixel, red, green, blue;
         int outputRed, outputGreen, outputBlue; 
         
@@ -138,7 +160,7 @@ public class ImageProcessing extends JFrame {
         rows = image.getHeight();
         columns = image.getWidth();
 
-        BufferedImage solImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
+        BufferedImage szImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
 
         for (i = 0; i < columns; i++){
             for (j = 0; j < rows; j++){
@@ -156,11 +178,11 @@ public class ImageProcessing extends JFrame {
                     blue = 255 - blue;
                 }
                 
-                solImage.setRGB(i, j, (red << 16) + (green << 8) + blue);
+                szImage.setRGB(i, j, (red << 16) + (green << 8) + blue);
             }
         }
 
-        return solImage;
+        return szImage;
     }
 
     BufferedImage gaussianBlur(BufferedImage image){
@@ -259,7 +281,7 @@ public class ImageProcessing extends JFrame {
 
         BufferedImage blurredImage = gaussianBlur(image);
         
-        BufferedImage edgeImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
+        BufferedImage laplaceImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
 
         // iterate each pixel in the image
         for (i = 0; i < columns; i++){
@@ -314,10 +336,10 @@ public class ImageProcessing extends JFrame {
                 if (blue > 255) blue = 255;
                 else if (blue < 0) blue = 0;
                 
-                edgeImage.setRGB(i, j, (red << 16) + (green << 8) + blue);
+                laplaceImage.setRGB(i, j, (red << 16) + (green << 8) + blue);
             }
         }
 
-        return edgeImage;
+        return laplaceImage;
     }
 }
