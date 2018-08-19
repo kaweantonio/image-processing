@@ -77,8 +77,8 @@ public class ImageProcessing extends JFrame {
 
         BufferedImage gsImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
 
-        for (i = 0; i < rows - 1; i++){
-            for (j = 0; j < columns - 1; j++){
+        for (i = 0; i < columns; i++){
+            for (j = 0; j < rows; j++){
                 pixel = image.getRGB(i, j);
                 
                 red = (pixel >> 16) & 0xff;
@@ -94,6 +94,7 @@ public class ImageProcessing extends JFrame {
         return gsImage;
     }
 
+    // sepia filter
     BufferedImage toSepia(BufferedImage image){
         int i, j, rows, columns, pixel, red, green, blue;
         int outputRed, outputGreen, outputBlue; 
@@ -103,8 +104,8 @@ public class ImageProcessing extends JFrame {
 
         BufferedImage spImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
 
-        for (i = 0; i < rows - 1; i++){
-            for (j = 0; j < columns - 1; j++){
+        for (i = 0; i < columns; i++){
+            for (j = 0; j < rows; j++){
                 pixel = image.getRGB(i, j);
                 
                 red = (pixel >> 16) & 0xff;
