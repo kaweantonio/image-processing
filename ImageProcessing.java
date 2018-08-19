@@ -26,8 +26,9 @@ public class ImageProcessing extends JFrame {
     ImageProcessing(){
         super("Filtro de Imagens");
 
+        // readImage("lena.png");
         readImage("waterlilies.jpg");
-        img2 = solarize(img1);
+        img2 = laplaceEdgeDetector(img1);
         img2lbl.setIcon(new ImageIcon(img2));
         imagePanel.add(img1lbl, BorderLayout.WEST);
         imagePanel.add(img2lbl, BorderLayout.EAST);
@@ -160,5 +161,163 @@ public class ImageProcessing extends JFrame {
         }
 
         return solImage;
+    }
+
+    BufferedImage gaussianBlur(BufferedImage image){
+        int i, j, rows, columns, pixel, red, green, blue;
+        // variables to iterate the kernel
+        int x, y, n, level;
+        // 3x3 gaussian kernel
+        int[][] kernel = {{1,2,1}, 
+                          {2,4,2}, 
+                          {1,2,1}}; 
+        // variables to navigate the neighborhood pixels
+        int xNeighborhood, yNeighborhood;
+        
+        rows = image.getHeight();
+        columns = image.getWidth();
+        n = kernel.length;
+        level = n/2;
+
+        BufferedImage blurredImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
+
+        // iterate each pixel in the image
+        for (i = 0; i < columns; i++){
+            for (j = 0; j < rows; j++){
+                red = 0;
+                green = 0;
+                blue = 0;
+
+                // iterate each pixel in the kernel
+                for (x = 0; x < n; x++) {
+                    for (y = 0; y < n; y++){
+                        xNeighborhood = i + x - level;
+                        yNeighborhood = j + y - level;
+
+                        // checks if x and y are out of bounds of the image
+                        if (xNeighborhood < 0 && yNeighborhood < 0){
+                            xNeighborhood = columns - 1;
+                            yNeighborhood = rows - 1;
+                        } else if (xNeighborhood < 0 && yNeighborhood == rows){
+                            xNeighborhood = columns - 1;
+                            yNeighborhood = 0;
+                        } else if (xNeighborhood == columns && yNeighborhood < 0){
+                            xNeighborhood = 0;
+                            yNeighborhood = rows - 1;
+                        } else if (xNeighborhood == columns && yNeighborhood == rows){
+                            xNeighborhood = 0;
+                            yNeighborhood = 0;
+                        } else if (xNeighborhood < 0 && yNeighborhood >= 0) {
+                            xNeighborhood = columns - 1;
+                        } else if (xNeighborhood == columns && yNeighborhood >= 0){
+                            xNeighborhood = 0;
+                        } else if (xNeighborhood >= 0 && yNeighborhood < 0){
+                            yNeighborhood = rows - 1;
+                        } else if (xNeighborhood >= 0 && yNeighborhood == rows){
+                            yNeighborhood = 0;
+                        }
+
+                        pixel = image.getRGB(xNeighborhood, yNeighborhood);
+
+                        red += ((pixel >> 16) & 0xff) * kernel[x][y] / 16;
+                        green += ((pixel >> 8) & 0xff) * kernel[x][y] / 16;
+                        blue += (pixel & 0xff) * kernel[x][y] / 16;
+                    }
+                }
+
+                if (red > 255) red = 255;
+                else if (red < 0) red = 0;
+
+                if (green > 255) green = 255;
+                else if (green < 0) green = 0;
+
+                if (blue > 255) blue = 255;
+                else if (blue < 0) blue = 0;
+                
+                blurredImage.setRGB(i, j, (red << 16) + (green << 8) + blue);
+            }
+        }
+
+        return blurredImage;
+    }
+
+    BufferedImage laplaceEdgeDetector(BufferedImage image){
+        int i, j, rows, columns, pixel, red, green, blue;
+        // variables to iterate the kernel
+        int x, y, n, level;
+        // 3x3 laplacian kernel
+        int[][] kernel = {{-1,-1,-1}, 
+                          {-1,8,-1}, 
+                          {-1,-1,-1}}; 
+        // variables to navigate the neighborhood pixels
+        int xNeighborhood, yNeighborhood;
+        
+        rows = image.getHeight();
+        columns = image.getWidth();
+        n = kernel.length;
+        level = n/2;
+
+        BufferedImage blurredImage = gaussianBlur(image);
+        
+        BufferedImage edgeImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
+
+        // iterate each pixel in the image
+        for (i = 0; i < columns; i++){
+            for (j = 0; j < rows; j++){
+                red = 0;
+                green = 0;
+                blue = 0;
+
+                // iterate each pixel in the kernel
+                for (x = 0; x < n; x++) {
+                    for (y = 0; y < n; y++){
+                        xNeighborhood = i + x - level;
+                        yNeighborhood = j + y - level;
+
+                        // checks if x and y are out of bounds of the image
+                        if (xNeighborhood < 0 && yNeighborhood < 0){
+                            xNeighborhood = columns - 1;
+                            yNeighborhood = rows - 1;
+                        } else if (xNeighborhood < 0 && yNeighborhood == rows){
+                            xNeighborhood = columns - 1;
+                            yNeighborhood = 0;
+                        } else if (xNeighborhood == columns && yNeighborhood < 0){
+                            xNeighborhood = 0;
+                            yNeighborhood = rows - 1;
+                        } else if (xNeighborhood == columns && yNeighborhood == rows){
+                            xNeighborhood = 0;
+                            yNeighborhood = 0;
+                        } else if (xNeighborhood < 0 && yNeighborhood >= 0) {
+                            xNeighborhood = columns - 1;
+                        } else if (xNeighborhood == columns && yNeighborhood >= 0){
+                            xNeighborhood = 0;
+                        } else if (xNeighborhood >= 0 && yNeighborhood < 0){
+                            yNeighborhood = rows - 1;
+                        } else if (xNeighborhood >= 0 && yNeighborhood == rows){
+                            yNeighborhood = 0;
+                        }
+
+                        pixel = blurredImage.getRGB(xNeighborhood, yNeighborhood);
+
+                        red += ((pixel >> 16) & 0xff) * kernel[x][y];
+                        green += ((pixel >> 8) & 0xff) * kernel[x][y];
+                        blue += (pixel & 0xff) * kernel[x][y];
+                    }
+                }
+
+                if (red > 255) red = 255;
+                else if (red < 0) red = 0;
+
+                if (green > 255) green = 255;
+                else if (green < 0) green = 0;
+
+                if (blue > 255) blue = 255;
+                else if (blue < 0) blue = 0;
+                
+                edgeImage.setRGB(i, j, (red << 16) + (green << 8) + blue);
+            }
+        }
+
+        return edgeImage;
     }
 }
