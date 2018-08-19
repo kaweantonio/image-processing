@@ -26,8 +26,8 @@ public class ImageProcessing extends JFrame {
     ImageProcessing(){
         super("Filtro de Imagens");
 
-        readImage("lena.png");
-        img2 = toSepia(img1);
+        readImage("waterlilies.jpg");
+        img2 = solarize(img1);
         img2lbl.setIcon(new ImageIcon(img2));
         imagePanel.add(img1lbl, BorderLayout.WEST);
         imagePanel.add(img2lbl, BorderLayout.EAST);
@@ -127,5 +127,38 @@ public class ImageProcessing extends JFrame {
         }
 
         return spImage;
+    }
+
+    // solarize filter
+    BufferedImage solarize(BufferedImage image){
+        int i, j, rows, columns, pixel, red, green, blue;
+        int intensity, threshold = 140;
+        
+        rows = image.getHeight();
+        columns = image.getWidth();
+
+        BufferedImage solImage = new BufferedImage(columns, rows, BufferedImage.TYPE_INT_RGB);
+
+        for (i = 0; i < columns; i++){
+            for (j = 0; j < rows; j++){
+                pixel = image.getRGB(i, j);
+                
+                red = (pixel >> 16) & 0xff;
+                green = (pixel >> 8) & 0xff;
+                blue = pixel & 0xff;
+
+                intensity = (int) (0.299 * red + 0.587 * green + 0.114 * blue);
+
+                if (intensity < threshold) {
+                    red = 255 - red;
+                    green = 255 - green;
+                    blue = 255 - blue;
+                }
+                
+                solImage.setRGB(i, j, (red << 16) + (green << 8) + blue);
+            }
+        }
+
+        return solImage;
     }
 }
